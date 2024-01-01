@@ -201,6 +201,7 @@ const RenderRecurisveWrappers: React.FC<{ wrappers: React.ComponentType<{ childr
 }
 
 const EditorRootElement: React.FC<{ children: React.ReactNode; className?: string, photoUploadPosition?: string }> = ({ children, className, photoUploadPosition }) => {
+  console.log('photoUploadPosition', photoUploadPosition)
   const editorRootElementRef = React.useRef<HTMLDivElement | null>(null)
   const setEditorRootElementRef = corePluginHooks.usePublisher('editorRootElementRef')
 

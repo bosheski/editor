@@ -54,6 +54,7 @@ export function ImageWithPreviewHook() {
   return (
     <>
       <MDXEditor
+        photoUploadPosition='outside'
         markdown="Preview hook that returns static base64: ![alt text](/attachments/my_image.png)"
         plugins={[
           imagePlugin({
