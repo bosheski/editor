@@ -59,6 +59,7 @@ export const imageSystem = system(
   (r, [{ rootEditor }]) => {
     const insertImage = r.node<InsertImageFormValues>()
     const imageAutocompleteSuggestions = r.node<string[]>([])
+    const type = r.node<string>('article')
     const disableImageResize = r.node<boolean>(false)
     const imageUploadHandler = r.node<ImageUploadHandler>(null)
     const imagePreviewHandler = r.node<ImagePreviewHandler>(null)
@@ -67,7 +68,6 @@ export const imageSystem = system(
     const openEditImageDialog = r.node<Omit<EditingImageDialogState, 'type'>>()
     const closeImageDialog = r.node<true>()
     const saveImage = r.node<InsertImageFormValues>()
-
     r.link(r.pipe(closeImageDialog, r.o.mapTo({ type: 'inactive' })), imageDialogState)
     r.link(r.pipe(openNewImageDialog, r.o.mapTo({ type: 'new' })), imageDialogState)
 
@@ -110,7 +110,7 @@ export const imageSystem = system(
 
         if (values.file.length > 0 || values.file) {
           console.log('imageUploadHandler', imageUploadHandler)
-          imageUploadHandler?.(values.file[0])
+          imageUploadHandler?.(values.file as any)
             .then(handler)
             .catch((e) => {
               throw e
@@ -203,6 +203,7 @@ export const imageSystem = system(
       closeImageDialog,
       imageUploadHandler,
       imageAutocompleteSuggestions,
+      type,
       disableImageResize,
       insertImage,
       imagePreviewHandler
@@ -215,7 +216,8 @@ interface ImagePluginParams {
   imageUploadHandler?: ImageUploadHandler
   imageAutocompleteSuggestions?: string[]
   disableImageResize?: boolean
-  imagePreviewHandler?: ImagePreviewHandler
+  imagePreviewHandler?: ImagePreviewHandler,
+  type?: string
 }
 
 export const [
@@ -229,6 +231,7 @@ export const [
 
   applyParamsToSystem: (realm, params: ImagePluginParams) => {
     realm.pubKey('imageUploadHandler', params?.imageUploadHandler || null)
+    realm.pubKey('type', params?.type || 'article')
     realm.pubKey('imageAutocompleteSuggestions', params?.imageAutocompleteSuggestions || [])
     realm.pubKey('disableImageResize', Boolean(params?.disableImageResize))
     realm.pubKey('imagePreviewHandler', params?.imagePreviewHandler || null)

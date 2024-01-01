@@ -83,6 +83,10 @@ function LazyImage({
 }
 
 export function ImageEditor({ src, title, alt, nodeKey, width, height }: MediaEditorProps): JSX.Element | null {
+  const [type] = imagePluginHooks.useEmitterValues('type')
+  if (type === 'post') {
+    return null
+  }
   const imageRef = React.useRef<any>(null)
   const buttonRef = React.useRef<HTMLButtonElement | null>(null)
   const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
