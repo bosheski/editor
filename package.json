@@ -2,14 +2,10 @@
   "name": "@mdxeditor/editor-bosheski",
   "author": "Petyo Ivanov",
   "homepage": "https://mdxeditor.dev/",
-  "bugs": {
-    "url": "https://github.com/mdx-editor/editor/issues",
-    "email": "petyo@virtuoso.dev"
-  },
   "private": false,
   "sideEffects": false,
   "type": "module",
-  "version": "0.0.0-development",
+  "version": "0.0.1",
   "description": "React component for rich text markdown editing",
   "scripts": {
     "build": "vite build",
