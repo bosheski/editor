@@ -82,32 +82,35 @@ export const imageSystem = system(
     r.sub(
       r.pipe(saveImage, r.o.withLatestFrom(rootEditor, imageUploadHandler, imageDialogState)),
       ([values, theEditor, imageUploadHandler, dialogState]) => {
+        console.log('values', values)
         const handler =
           dialogState.type === 'editing'
             ? (src: string) => {
-                theEditor?.update(() => {
-                  const { nodeKey } = dialogState
-                  const imageNode = $getNodeByKey(nodeKey) as ImageNode
+              theEditor?.update(() => {
+                const { nodeKey } = dialogState
+                const imageNode = $getNodeByKey(nodeKey) as ImageNode
 
-                  imageNode.setTitle(values.title)
-                  imageNode.setAltText(values.altText)
-                  imageNode.setSrc(src)
-                })
-                r.pub(imageDialogState, { type: 'inactive' })
-              }
+                imageNode.setTitle(values.title)
+                imageNode.setAltText(values.altText)
+                imageNode.setSrc(src)
+              })
+              r.pub(imageDialogState, { type: 'inactive' })
+            }
             : (src: string) => {
-                theEditor?.update(() => {
-                  const imageNode = $createImageNode({ altText: values.altText ?? '', src, title: values.title ?? '' })
-                  $insertNodes([imageNode])
-                  if ($isRootOrShadowRoot(imageNode.getParentOrThrow())) {
-                    $wrapNodeInElement(imageNode, $createParagraphNode).selectEnd()
-                  }
-                })
-                r.pub(imageDialogState, { type: 'inactive' })
-              }
+              theEditor?.update(() => {
+                console.log('src', src)
+                const imageNode = $createImageNode({ altText: values.altText ?? '', src, title: values.title ?? '' })
+                $insertNodes([imageNode])
+                if ($isRootOrShadowRoot(imageNode.getParentOrThrow())) {
+                  $wrapNodeInElement(imageNode, $createParagraphNode).selectEnd()
+                }
+              })
+              r.pub(imageDialogState, { type: 'inactive' })
+            }
 
-        if (values.file.length > 0) {
-          imageUploadHandler?.(values.file.item(0)!)
+        if (values.file.length > 0 || values.file) {
+          console.log('imageUploadHandler', imageUploadHandler)
+          imageUploadHandler?.(values.file[0])
             .then(handler)
             .catch((e) => {
               throw e
@@ -135,13 +138,13 @@ export const imageSystem = system(
 
       const theUploadHandler = r.getValue(imageUploadHandler)
 
-      editor?.registerCommand<DragEvent>(
-        DRAGSTART_COMMAND,
-        (event) => {
-          return onDragStart(event)
-        },
-        COMMAND_PRIORITY_HIGH
-      )
+      // editor?.registerCommand<DragEvent>(
+      //   DRAGSTART_COMMAND,
+      //   (event) => {
+      //     return onDragStart(event)
+      //   },
+      //   COMMAND_PRIORITY_HIGH
+      // )
       editor?.registerCommand<DragEvent>(
         DRAGOVER_COMMAND,
         (event) => {

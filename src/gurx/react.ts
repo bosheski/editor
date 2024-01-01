@@ -75,31 +75,31 @@ type StringKeys<T> = Extract<keyof T, string>
 /** @internal */
 export type PropsFromPropMap<Sys extends System, Map extends SystemPropsMap<Sys>> = {
   [K in StringKeys<Map['required']>]: Map['required'][K] extends string
-    ? Sys[Map['required'][K]] extends RealmNode<infer R>
-      ? R
-      : never
-    : never
+  ? Sys[Map['required'][K]] extends RealmNode<infer R>
+  ? R
+  : never
+  : never
 } & {
-  [K in StringKeys<Map['optional']>]?: Map['optional'][K] extends string
+    [K in StringKeys<Map['optional']>]?: Map['optional'][K] extends string
     ? Sys[Map['optional'][K]] extends RealmNode<infer R>
-      ? R
-      : never
+    ? R
     : never
-} & {
-  [K in StringKeys<Map['events']>]?: Map['events'][K] extends string
+    : never
+  } & {
+    [K in StringKeys<Map['events']>]?: Map['events'][K] extends string
     ? Sys[Map['events'][K]] extends RealmNode<infer R>
-      ? (value: R) => void
-      : never
+    ? (value: R) => void
     : never
-}
+    : never
+  }
 
 /** @internal */
 export type MethodsFromPropMap<Sys extends System, Map extends SystemPropsMap<Sys>> = {
   [K in StringKeys<Map['methods']>]: Map['methods'][K] extends string
-    ? Sys[Map['methods'][K]] extends RealmNode<infer R>
-      ? (value: R) => void
-      : never
-    : never
+  ? Sys[Map['methods'][K]] extends RealmNode<infer R>
+  ? (value: R) => void
+  : never
+  : never
 }
 
 /**
@@ -213,10 +213,10 @@ export function realmFactoryToComponent<
       { value: realm },
       Root
         ? React.createElement(
-            Root as unknown as React.ComponentType,
-            omit([...requiredPropNames, ...optionalPropNames, ...eventNames], props),
-            children
-          )
+          Root as unknown as React.ComponentType,
+          omit([...requiredPropNames, ...optionalPropNames, ...eventNames], props),
+          children
+        )
         : children
     )
   })
@@ -368,6 +368,7 @@ export const RealmPluginInitializer = function <P extends Array<ReturnType<Plugi
   const validPlugins = React.useMemo(() => {
     const availablePlugins = plugins.map((plugin) => plugin.id)
     const validPlugins: P = plugins.filter((plugin) => {
+      console.log('checking plugin', plugin.id)
       if (plugin.dependencies) {
         if (plugin.dependencies.some((dep) => !availablePlugins.includes(dep))) {
           console.warn('MDXEditor plugin', plugin.id, 'has some missing dependencies', plugin.dependencies, ', skipping')

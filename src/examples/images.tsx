@@ -1,6 +1,6 @@
 import React from 'react'
 import { DiffSourceToggleWrapper, InsertImage, MDXEditor, diffSourcePlugin, imagePlugin, jsxPlugin, toolbarPlugin } from '../'
-
+import axios from 'axios';
 const markdownWithHtmlImages = `
 Hello world
 
@@ -73,22 +73,64 @@ export function ImageWithPreviewHook() {
 }
 
 export function ImageDialogButtonExample() {
+  const [uploadProgress, setUploadProgress] = React.useState<number | undefined>(0)
+  const [selectedFile, setSelectedFile] = React.useState<File | undefined>(undefined)
+  const [preview, setPreview] = React.useState<string | undefined>(undefined)
+  React.useEffect(() => {
+    if (!selectedFile) return
+    const objectURL = URL.createObjectURL(selectedFile)
+    setPreview(objectURL)
+    return () => {
+      URL.revokeObjectURL(objectURL)
+      setPreview(undefined)
+    }
+  }, [selectedFile])
   return (
     <>
       <MDXEditor
         markdown=""
+        type="post"
         plugins={[
           imagePlugin({
-            disableImageResize: true,
-            imageUploadHandler: async () => Promise.resolve('https://picsum.photos/200/300?grayscale'),
-            imageAutocompleteSuggestions: ['https://via.placeholder.com/150', 'https://via.placeholder.com/250']
+            imageUploadHandler: async (file: any) => {
+              setSelectedFile(file)
+              console.log('image', file);
+              const formData = new FormData();
+              formData.append('file', file);
+              formData.append('upload_preset', 'test_uploads')
+              // if the file type is video, make another fetch
+              const onUploadProgress = (e: any) => {
+                const { loaded, total } = e;
+
+                const progress = Math.round((loaded * 100.0) / total);
+                setUploadProgress(progress);
+              }
+
+              if (file.type.startsWith('video')) {
+                // set resource_type to video
+                formData.append('resource_type', 'video')
+                const { data } = await axios.post('https://api.cloudinary.com/v1_1/dpcr5qeri/video/upload', formData, {
+                  onUploadProgress,
+                });
+                console.log('data', data);
+                return data.secure_url;
+              }
+
+              const { data } = await axios.post('https://api.cloudinary.com/v1_1/dpcr5qeri/image/upload', formData, {
+                onUploadProgress,
+              });
+              setSelectedFile(undefined)
+              console.log('data', data);
+              return data.secure_url;
+            },
           }),
+          toolbarPlugin({ toolbarContents: () => <InsertImage /> }),
           diffSourcePlugin(),
-          jsxPlugin(),
-          toolbarPlugin({ toolbarContents: () => <InsertImage /> })
-        ]}
-        onChange={console.log}
+          jsxPlugin(),]}
+        photoUploadPosition='outside'
       />
+      {preview && <img src={preview} />}
+      <div>Upload progress: {uploadProgress}%</div>
     </>
   )
 }

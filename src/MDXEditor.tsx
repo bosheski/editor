@@ -11,6 +11,7 @@ import classNames from 'classnames'
 import { ToMarkdownOptions } from './exportMarkdownFromLexical'
 import { noop } from './utils/fp'
 import { IconKey } from './plugins/core/Icon'
+import { ImageUpload } from './plugins/image/ImageUpload'
 
 const LexicalProvider: React.FC<{ children: JSX.Element | string | (JSX.Element | string)[] }> = ({ children }) => {
   const [initialRootEditorState, nodes, readOnly] = corePluginHooks.useEmitterValues(
@@ -130,7 +131,15 @@ export interface MDXEditorProps {
   /**
    * Set to false if you want to suppress the processing of HTML tags.
    */
-  suppressHtmlProcessing?: boolean
+  suppressHtmlProcessing?: boolean,
+  /**
+   * Use this prop if you want to have the upload image icon nested outside the editor with normal dialog.
+   */
+  photoUploadPosition?: 'outside' | 'inside'
+  /**
+     * Use this prop to change the type of the editor.
+     */
+  type?: 'post' | 'article'
 }
 
 const DEFAULT_MARKDOWN_OPTIONS: ToMarkdownOptions = {
@@ -191,7 +200,7 @@ const RenderRecurisveWrappers: React.FC<{ wrappers: React.ComponentType<{ childr
   )
 }
 
-const EditorRootElement: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+const EditorRootElement: React.FC<{ children: React.ReactNode; className?: string, photoUploadPosition?: string }> = ({ children, className, photoUploadPosition }) => {
   const editorRootElementRef = React.useRef<HTMLDivElement | null>(null)
   const setEditorRootElementRef = corePluginHooks.usePublisher('editorRootElementRef')
 
@@ -211,7 +220,12 @@ const EditorRootElement: React.FC<{ children: React.ReactNode; className?: strin
       popupContainer.remove()
     }
   }, [className, editorRootElementRef, setEditorRootElementRef])
-  return <div className={classNames(styles.editorRoot, styles.editorWrapper, className, 'mdxeditor')}>{children}</div>
+  return <>
+    <div className={classNames(styles.editorRoot, styles.editorWrapper, className, 'mdxeditor')}>
+      {children}
+    </div>
+    {useHasPlugin('image') && photoUploadPosition === 'outside' && <ImageUpload />}
+  </>
 }
 
 const Methods: React.FC<{ mdxRef: React.ForwardedRef<MDXEditorMethods> }> = ({ mdxRef }) => {
@@ -250,30 +264,33 @@ const Methods: React.FC<{ mdxRef: React.ForwardedRef<MDXEditorMethods> }> = ({ m
  */
 export const MDXEditor = React.forwardRef<MDXEditorMethods, MDXEditorProps>((props, ref) => {
   return (
-    <RealmPluginInitializer
-      plugins={[
-        corePlugin({
-          contentEditableClassName: props.contentEditableClassName ?? '',
-          initialMarkdown: props.markdown,
-          onChange: props.onChange ?? noop,
-          onBlur: props.onBlur ?? noop,
-          toMarkdownOptions: props.toMarkdownOptions ?? DEFAULT_MARKDOWN_OPTIONS,
-          autoFocus: props.autoFocus ?? false,
-          placeholder: props.placeholder ?? '',
-          readOnly: Boolean(props.readOnly),
-          iconComponentFor: props.iconComponentFor ?? defaultIconComponentFor,
-          suppressHtmlProcessing: props.suppressHtmlProcessing ?? false,
-          onError: props.onError ?? noop
-        }),
-        ...(props.plugins || [])
-      ]}
-    >
-      <EditorRootElement className={props.className}>
-        <LexicalProvider>
-          <RichTextEditor />
-        </LexicalProvider>
-      </EditorRootElement>
-      <Methods mdxRef={ref} />
-    </RealmPluginInitializer>
+    <>
+      <RealmPluginInitializer
+        plugins={[
+          corePlugin({
+            contentEditableClassName: props.contentEditableClassName ?? '',
+            initialMarkdown: props.markdown,
+            onChange: props.onChange ?? noop,
+            onBlur: props.onBlur ?? noop,
+            type: props.type ?? 'article',
+            toMarkdownOptions: props.toMarkdownOptions ?? DEFAULT_MARKDOWN_OPTIONS,
+            autoFocus: props.autoFocus ?? false,
+            placeholder: props.placeholder ?? '',
+            readOnly: Boolean(props.readOnly),
+            iconComponentFor: props.iconComponentFor ?? defaultIconComponentFor,
+            suppressHtmlProcessing: props.suppressHtmlProcessing ?? false,
+            onError: props.onError ?? noop
+          }),
+          ...(props.plugins || [])
+        ]}
+      >
+        <EditorRootElement className={props.className} photoUploadPosition={props.photoUploadPosition}>
+          <LexicalProvider>
+            <RichTextEditor />
+          </LexicalProvider>
+        </EditorRootElement>
+        <Methods mdxRef={ref} />
+      </RealmPluginInitializer >
+    </>
   )
 })

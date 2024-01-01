@@ -17,7 +17,7 @@ interface ImageFormFields {
 export const ImageDialog: React.FC = () => {
   const [imageAutocompleteSuggestions, state] = imagePluginHooks.useEmitterValues('imageAutocompleteSuggestions', 'imageDialogState')
   const saveImage = imagePluginHooks.usePublisher('saveImage')
-  const [editorRootElementRef] = corePluginHooks.useEmitterValues('editorRootElementRef')
+  const [editorRootElementRef] = corePluginHooks.useEmitterValues('editorRootElementRef');
   const closeImageDialog = imagePluginHooks.usePublisher('closeImageDialog')
 
   const { register, handleSubmit, control, setValue, reset } = useForm<ImageFormFields>({
@@ -45,6 +45,7 @@ export const ImageDialog: React.FC = () => {
         >
           <form
             onSubmit={(e) => {
+              console.log('submitting', e)
               void handleSubmit(saveImage)(e)
               reset({ src: '', title: '', altText: '' })
               e.preventDefault()

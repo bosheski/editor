@@ -834,6 +834,11 @@
 .imageWrapper {
   display: inline-block;
   position: relative;
+  & img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+  }
 }
 
 .imageWrapper[draggable=true] {
@@ -1127,4 +1132,9 @@ form.multiFieldForm {
 .popupContainer {
   position: relative;
   z-index: 1;
+}
+
+.externalUploadImage {
+  width: 25px;
+  height: 25px;
 }

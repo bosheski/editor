@@ -2,6 +2,7 @@ import React from 'react'
 
 import add_column from '@/icons/add_column.svg'
 import add_photo from '@/icons/add_photo.svg'
+import upload_photo from '@/icons/upload_photo.svg'
 import add_row from '@/icons/add_row.svg'
 import arrow_drop_down from '@/icons/arrow_drop_down.svg'
 import check from '@/icons/check.svg'
@@ -46,6 +47,7 @@ import undo from '@/icons/undo.svg'
 
 export type IconKey =
   | 'add_column'
+  | 'upload_photo'
   | 'add_photo'
   | 'add_row'
   | 'arrow_drop_down'
@@ -91,6 +93,7 @@ export type IconKey =
 
 const IconMap: Record<IconKey, React.FC> = {
   add_column,
+  upload_photo,
   add_photo,
   add_row,
   arrow_drop_down,

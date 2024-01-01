@@ -26,9 +26,9 @@ import { corePluginHooks } from '../core'
 import { $isImageNode } from './ImageNode'
 import ImageResizer from './ImageResizer'
 
-export interface ImageEditorProps {
+export interface MediaEditorProps {
   nodeKey: string
-  src: string
+  src: string,
   alt?: string
   title?: string
   width: number | 'inherit'
@@ -62,7 +62,7 @@ function LazyImage({
   title: string
   alt: string
   className: string | null
-  imageRef: { current: null | HTMLImageElement }
+  imageRef: { current: HTMLImageElement | null }
   src: string
   width: number | 'inherit'
   height: number | 'inherit'
@@ -82,19 +82,19 @@ function LazyImage({
   )
 }
 
-export function ImageEditor({ src, title, alt, nodeKey, width, height }: ImageEditorProps): JSX.Element | null {
-  const imageRef = React.useRef<null | HTMLImageElement>(null)
+export function ImageEditor({ src, title, alt, nodeKey, width, height }: MediaEditorProps): JSX.Element | null {
+  const imageRef = React.useRef<any>(null)
   const buttonRef = React.useRef<HTMLButtonElement | null>(null)
   const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
+  const [showResizer, setShowResizer] = React.useState<boolean>(false)
   const [editor] = useLexicalComposerContext()
   const [selection, setSelection] = React.useState<RangeSelection | NodeSelection | GridSelection | null>(null)
   const activeEditorRef = React.useRef<LexicalEditor | null>(null)
   const [isResizing, setIsResizing] = React.useState<boolean>(false)
   const [disableImageResize] = imagePluginHooks.useEmitterValues('disableImageResize')
   const [imagePreviewHandler] = imagePluginHooks.useEmitterValues('imagePreviewHandler')
-  const [imageSource, setImageSource] = React.useState<string | null>(null)
+  const [mediaSource, setMediaSource] = React.useState({ src: '', type: '' })
   const [initialImagePath, setInitialImagePath] = React.useState<string | null>(null)
-  const openEditImageDialog = imagePluginHooks.usePublisher('openEditImageDialog')
   const [iconComponentFor] = corePluginHooks.useEmitterValues('iconComponentFor')
 
   const onDelete = React.useCallback(
@@ -111,7 +111,19 @@ export function ImageEditor({ src, title, alt, nodeKey, width, height }: ImageEd
     },
     [isSelected, nodeKey]
   )
+  const handleDeleteImage = React.useCallback(
+    (e: React.MouseEvent, nodeKey: string) => {
+      e.preventDefault()
 
+      editor.update(() => {
+        const node = $getNodeByKey(nodeKey)
+        if ($isImageNode(node)) {
+          node.remove()
+        }
+      })
+    },
+    [editor]
+  )
   const onEnter = React.useCallback(
     (event: KeyboardEvent) => {
       const latestSelection = $getSelection()
@@ -130,20 +142,10 @@ export function ImageEditor({ src, title, alt, nodeKey, width, height }: ImageEd
 
   const onEscape = React.useCallback(
     (event: KeyboardEvent) => {
-      if (buttonRef.current === event.target) {
-        $setSelection(null)
-        editor.update(() => {
-          setSelected(true)
-          const parentRootElement = editor.getRootElement()
-          if (parentRootElement !== null) {
-            parentRootElement.focus()
-          }
-        })
-        return true
-      }
+      setShowResizer(false)
       return false
     },
-    [editor, setSelected]
+    [editor, setSelected, setShowResizer]
   )
 
   React.useEffect(() => {
@@ -151,11 +153,19 @@ export function ImageEditor({ src, title, alt, nodeKey, width, height }: ImageEd
       const callPreviewHandler = async () => {
         if (!initialImagePath) setInitialImagePath(src)
         const updatedSrc = await imagePreviewHandler(src)
-        setImageSource(updatedSrc)
+        if (updatedSrc.endsWith('png') || updatedSrc.endsWith('jpg') || updatedSrc.endsWith('jpeg') || updatedSrc.endsWith('gif') || updatedSrc.endsWith('svg')) {
+          setMediaSource({ src: updatedSrc, type: 'image' })
+        } else {
+          setMediaSource({ src: updatedSrc, type: 'video' })
+        }
       }
       callPreviewHandler().catch(console.error)
     } else {
-      setImageSource(src)
+      if (src.endsWith('png') || src.endsWith('jpg') || src.endsWith('jpeg') || src.endsWith('gif') || src.endsWith('svg')) {
+        setMediaSource({ src: src, type: 'image' })
+      } else {
+        setMediaSource({ src: src, type: 'video' })
+      }
     }
   }, [src, imagePreviewHandler])
 
@@ -179,11 +189,19 @@ export function ImageEditor({ src, title, alt, nodeKey, width, height }: ImageEd
         CLICK_COMMAND,
         (payload) => {
           const event = payload
-
           if (isResizing) {
             return true
           }
+          const button = buttonRef.current
+          if (button !== null && button.contains(event.target as Node)) {
+            setShowResizer(true);
+            return true
+          } else {
+            setShowResizer(false);
+          }
+
           if (event.target === imageRef.current) {
+            // add drag pointer to the image
             if (event.shiftKey) {
               setSelected(!isSelected)
             } else {
@@ -219,65 +237,85 @@ export function ImageEditor({ src, title, alt, nodeKey, width, height }: ImageEd
       isMounted = false
       unregister()
     }
-  }, [clearSelection, editor, isResizing, isSelected, nodeKey, onDelete, onEnter, onEscape, setSelected])
+  }, [clearSelection, editor, isResizing, isSelected, nodeKey, onDelete, onEnter, onEscape, setSelected, showResizer])
+
 
   const onResizeEnd = (nextWidth: 'inherit' | number, nextHeight: 'inherit' | number) => {
     // Delay hiding the resize bars for click case
     setTimeout(() => {
-      setIsResizing(false)
-    }, 200)
+      setIsResizing(false);
+    }, 200);
 
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
+      const node = $getNodeByKey(nodeKey);
       if ($isImageNode(node)) {
-        node.setWidthAndHeight(nextWidth, nextHeight)
+        node.setWidthAndHeight(nextWidth, nextHeight);
       }
-    })
-  }
+    });
+  };
 
   const onResizeStart = () => {
-    setIsResizing(true)
-  }
+    setIsResizing(true);
+  };
 
   const draggable = $isNodeSelection(selection)
   const isFocused = isSelected
 
-  return imageSource !== null ? (
+  return mediaSource !== null ? (
     <React.Suspense fallback={null}>
-      <div className={styles.imageWrapper} data-editor-block-type="image">
-        <div draggable={draggable}>
-          <LazyImage
-            width={width}
-            height={height}
-            className={classNames({
-              [styles.focusedImage]: isFocused
-            })}
-            src={imageSource}
-            title={title || ''}
-            alt={alt || ''}
-            imageRef={imageRef}
-          />
+      <div style={{ width: '100%', maxWidth: '100%' }}>
+        <div className={styles.imageWrapper} style={{ maxWidth: "100%" }} data-editor-block-type="image">
+          {mediaSource.type === 'video' ? (
+            <div draggable={draggable}>
+              <video
+                width={width}
+                height={height}
+                style={{ maxWidth: "100%" }}
+                className={classNames({
+                  [styles.focusedImage]: isFocused
+                })}
+                src={mediaSource.src}
+                title={title || ''}
+                ref={imageRef}
+                controls
+              />
+            </div>
+          ) : (
+            <div draggable={draggable}>
+
+              <LazyImage
+                width={width}
+                height={height}
+                className={classNames({
+                  [styles.focusedImage]: isFocused
+                })}
+                src={mediaSource.src}
+                title={title || ''}
+                alt={alt || ''}
+                imageRef={imageRef}
+              />
+            </div>
+          )}
+          {showResizer && !disableImageResize && (
+            <ImageResizer editor={editor} imageRef={imageRef} onResizeStart={onResizeStart} onResizeEnd={onResizeEnd} />
+          )}
+          <button onClick={(event) => {
+            handleDeleteImage(event, nodeKey);
+          }} className={styles.imageDeleteButton}>
+            X
+          </button>
+          <button
+            type="button"
+            className={classNames(styles.iconButton, styles.editImageButton)}
+            title="Edit image"
+            ref={buttonRef}
+            onClick={() => {
+              setShowResizer(!showResizer)
+            }}
+          >
+            {iconComponentFor('settings')}
+          </button>
         </div>
-        {draggable && isFocused && !disableImageResize && (
-          <ImageResizer editor={editor} imageRef={imageRef} onResizeStart={onResizeStart} onResizeEnd={onResizeEnd} />
-        )}
-        <button
-          type="button"
-          className={classNames(styles.iconButton, styles.editImageButton)}
-          title="Edit image"
-          onClick={() => {
-            openEditImageDialog({
-              nodeKey: nodeKey,
-              initialValues: {
-                src: !initialImagePath ? imageSource : initialImagePath,
-                title: title || '',
-                altText: alt || ''
-              }
-            })
-          }}
-        >
-          {iconComponentFor('settings')}
-        </button>
       </div>
     </React.Suspense>
   ) : null

@@ -428,9 +428,9 @@ export const coreSystem = system((r) => {
       anchorNode.getKey() === 'root'
         ? anchorNode
         : $findMatchingParent(anchorNode, (e) => {
-            const parent = e.getParent()
-            return parent !== null && $isRootOrShadowRoot(parent)
-          })
+          const parent = e.getParent()
+          return parent !== null && $isRootOrShadowRoot(parent)
+        })
 
     if (element === null) {
       element = anchorNode.getTopLevelElementOrThrow()
@@ -592,7 +592,8 @@ interface CorePluginParams {
   toMarkdownOptions: NonNullable<LexicalConvertOptions['toMarkdownOptions']>
   readOnly: boolean
   iconComponentFor: (name: IconKey) => React.ReactElement
-  suppressHtmlProcessing?: boolean
+  suppressHtmlProcessing?: boolean,
+  type: 'post' | 'article'
 }
 
 export const [

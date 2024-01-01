@@ -38,8 +38,6 @@ import { ElementNode } from 'lexical'
 
 const youtubeMarkdown = `
 This should be an youtube video:
-
-::youtube{#A5lXAKrttBU}
 `
 
 const GenericDirectiveDescriptor: DirectiveDescriptor = {
@@ -64,6 +62,7 @@ const YouTubeButton = () => {
       onSubmit={(url) => {
         const videoId = new URL(url).searchParams.get('v')
         if (videoId) {
+          console.log('inserting', { videoId })
           insertDirective({
             name: 'youtube',
             type: 'leafDirective',
@@ -227,7 +226,7 @@ const MdastImageDirectiveVisitor: MdastImportVisitor<TextDirective> = {
       src: mdastNode.attributes?.src ?? '',
       altText: (mdastNode.children[0] as Mdast.Text).value
     }
-    ;(lexicalParent as ElementNode).append($createImageNode(payload))
+      ; (lexicalParent as ElementNode).append($createImageNode(payload))
   }
 }
 
