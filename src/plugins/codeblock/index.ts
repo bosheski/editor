@@ -32,7 +32,13 @@ export interface CodeBlockEditorProps {
    * An emitter that will execute its subscription when the editor should be focused.
    * Note: you don't need to unsubscribe, the emiter has a single subscription model.
    */
-  focusEmitter: VoidEmitter
+  focusEmitter: VoidEmitter,
+
+  /**
+   * Theme to use for the editor.
+   */
+  theme?: {}
+
 }
 
 /**
@@ -80,6 +86,8 @@ export const codeBlockSystem = system(
       insertDecoratorNode
     )
 
+
+
     r.link(
       r.pipe(
         appendCodeBlockEditorDescriptor,
@@ -116,6 +124,11 @@ export interface CodeBlockPluginParams {
    * The default language to use when creating a new code block if no language is passed.
    */
   defaultCodeBlockLanguage?: string
+
+  /**
+   * Theme to use for the editor.
+   */
+  theme?: {}
 }
 
 export const [

@@ -38,8 +38,9 @@ const LexicalProvider: React.FC<{ children: JSX.Element | string | (JSX.Element 
 }
 
 const RichTextEditor: React.FC = () => {
-  const [contentEditableClassName, composerChildren, topAreaChildren, editorWrappers, placeholder] = corePluginHooks.useEmitterValues(
+  const [contentEditableClassName, placeholderEditableClassName, composerChildren, topAreaChildren, editorWrappers, placeholder] = corePluginHooks.useEmitterValues(
     'contentEditableClassName',
+    'placeholderEditableClassName',
     'composerChildren',
     'topAreaChildren',
     'editorWrappers',
@@ -55,7 +56,7 @@ const RichTextEditor: React.FC = () => {
           <RichTextPlugin
             contentEditable={<ContentEditable className={classNames(styles.contentEditable, contentEditableClassName)} />}
             placeholder={
-              <div className={classNames(styles.contentEditable, styles.placeholder, contentEditableClassName)}>
+              <div className={classNames(styles.contentEditable, styles.placeholder, contentEditableClassName, placeholderEditableClassName)}>
                 <p>{placeholder}</p>
               </div>
             }
@@ -79,6 +80,12 @@ export interface MDXEditorProps {
    * Use this to style the various content elements like lists and blockquotes.
    */
   contentEditableClassName?: string
+
+  /**
+   * the CSS class to apply to the placeholder element of the editor.
+   * 
+   */
+  placeholderEditableClassName?: string
   /**
    * The markdown to edit. Notice that this is read only when the component is mounted.
    * To change the component content dynamically, use the `MDXEditorMethods.setMarkdown` method.
@@ -270,6 +277,7 @@ export const MDXEditor = React.forwardRef<MDXEditorMethods, MDXEditorProps>((pro
         plugins={[
           corePlugin({
             contentEditableClassName: props.contentEditableClassName ?? '',
+            placeholderEditableClassName: props.placeholderEditableClassName ?? '',
             initialMarkdown: props.markdown,
             onChange: props.onChange ?? noop,
             onBlur: props.onBlur ?? noop,

@@ -1,3 +1,4 @@
+import React from 'react'
 import { realmPlugin, system } from '../../gurx'
 import { coreSystem } from '../core'
 import { codeBlockSystem } from '../codeblock'
@@ -24,7 +25,7 @@ export const codeMirrorSystem = system(
           return {
             code: code,
             language,
-            meta: ''
+            meta: '',
           }
         })
       ),
@@ -47,17 +48,19 @@ export const [
 ] = realmPlugin({
   id: 'codemirror',
   systemSpec: codeMirrorSystem,
-  applyParamsToSystem(r, params: { codeBlockLanguages: Record<string, string> }) {
+  applyParamsToSystem(r, params: { codeBlockLanguages: Record<string, string>, theme?: any }) {
     r.pubKey('codeBlockLanguages', params.codeBlockLanguages)
   },
 
-  init(r, { codeBlockLanguages }) {
+
+  init(r, { codeBlockLanguages, theme }) {
+    console.log('theme', theme)
     r.pubKey('appendCodeBlockEditorDescriptor', {
       match(language, meta) {
         return codeBlockLanguages.hasOwnProperty(language) && meta === ''
       },
       priority: 1,
-      Editor: CodeMirrorEditor
+      Editor: (props) => <CodeMirrorEditor {...props} theme={theme} />
     })
   }
 })

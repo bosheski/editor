@@ -4,7 +4,7 @@ import styles from './lexical-theme.module.css'
 export const lexicalTheme: EditorThemeClasses = {
   text: {
     bold: styles.bold,
-    italic: styles.italic,
+    italic: "italic",
     underline: styles.underline,
     code: styles.code,
     strikethrough: styles.strikethrough,
